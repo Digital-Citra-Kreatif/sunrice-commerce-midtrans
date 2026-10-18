@@ -1,0 +1,67 @@
+{
+    "name": "sunrice/midtrans",
+    "description": "Midtrans Snap payments for Sunrice Commerce: cards, e-wallets, QRIS and virtual accounts.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "sunrice",
+        "laravel",
+        "ecommerce",
+        "midtrans",
+        "payments"
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-commerce"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-cms"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "midtrans/midtrans-php": "^2.6",
+        "sunrice/commerce": "dev-main"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sunrice\\Midtrans\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sunrice\\Midtrans\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sunrice\\Midtrans\\MidtransServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint --test",
+        "format": "pint",
+        "analyse": "phpstan analyse --memory-limit=1G"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
