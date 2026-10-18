@@ -44,7 +44,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, dom, sqlite3, pdo_sqlite, mysqlnd, pdo_mysql, pgsql, pdo_pgsql, gd, intl
+          extensions: mbstring, dom, curl, sqlite3, pdo_sqlite, mysqlnd, pdo_mysql, pgsql, pdo_pgsql, gd, intl
 
       - name: Configure database (sqlite)
         if: matrix.db == 'sqlite'
@@ -73,8 +73,11 @@ jobs:
           echo "DB_PASSWORD=postgres" >> $GITHUB_ENV
 
       - name: Install dependencies
-        # sunrice/commerce and sunrice/cms come from their public GitHub
-        # repositories (dev-main) until they are on Packagist.
+        # sunrice/cms and sunrice/commerce come from their public GitHub
+        # repositories until they are on Packagist; the token only raises
+        # GitHub's API rate limit.
+        env:
+          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
         run: composer install --no-interaction --prefer-dist
 
       - name: Lint

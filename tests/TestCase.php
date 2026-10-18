@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sunrice\Midtrans\Tests;
+namespace Sunrice\CommerceMidtrans\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\ServiceProvider as InertiaServiceProvider;
@@ -14,8 +14,8 @@ use Spatie\OneTimePasswords\OneTimePasswordsServiceProvider;
 use Spatie\Permission\PermissionServiceProvider;
 use Spatie\Sitemap\SitemapServiceProvider;
 use Sunrice\Commerce\CommerceServiceProvider;
+use Sunrice\CommerceMidtrans\MidtransServiceProvider;
 use Sunrice\Frontend\RouteMatcher;
-use Sunrice\Midtrans\MidtransServiceProvider;
 use Sunrice\SunriceServiceProvider;
 use Workbench\App\Models\User;
 
