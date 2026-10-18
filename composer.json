@@ -1,29 +1,34 @@
 {
-    "name": "sunrice/midtrans",
-    "description": "Midtrans Snap payments for Sunrice Commerce: cards, e-wallets, QRIS and virtual accounts.",
+    "name": "sunrice/commerce-midtrans",
+    "description": "Midtrans payments for Sunrice Commerce: cards, e-wallets, QRIS and virtual accounts on Midtrans Snap.",
     "type": "library",
     "license": "MIT",
     "keywords": [
         "sunrice",
         "laravel",
         "ecommerce",
+        "payments",
         "midtrans",
-        "payments"
+        "indonesia"
     ],
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-commerce"
+            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-cms"
         },
         {
             "type": "vcs",
-            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-cms"
+            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-commerce"
         }
     ],
     "require": {
         "php": "^8.4",
+        "illuminate/contracts": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/support": "^13.0",
         "midtrans/midtrans-php": "^2.6",
-        "sunrice/commerce": "dev-main"
+        "spatie/laravel-package-tools": "^1.93",
+        "sunrice/commerce": "^1.0 || dev-main"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
@@ -34,19 +39,19 @@
     },
     "autoload": {
         "psr-4": {
-            "Sunrice\\Midtrans\\": "src/"
+            "Sunrice\\CommerceMidtrans\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Sunrice\\Midtrans\\Tests\\": "tests/",
+            "Sunrice\\CommerceMidtrans\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Sunrice\\Midtrans\\MidtransServiceProvider"
+                "Sunrice\\CommerceMidtrans\\MidtransServiceProvider"
             ]
         }
     },

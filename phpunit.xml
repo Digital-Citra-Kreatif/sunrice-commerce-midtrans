@@ -5,7 +5,7 @@
          colors="true"
          cacheDirectory=".phpunit.cache">
     <testsuites>
-        <testsuite name="Sunrice Midtrans Test Suite">
+        <testsuite name="Sunrice Commerce Midtrans Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

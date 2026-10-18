@@ -14,7 +14,7 @@ use Sunrice\Commerce\Checkout\CheckoutData;
 use Sunrice\Commerce\Regions\RegionImporter;
 use Sunrice\Commerce\Shipping\Models\ShippingMethod;
 use Sunrice\Commerce\Shipping\Models\ShippingZone;
-use Sunrice\Midtrans\Tests\TestCase;
+use Sunrice\CommerceMidtrans\Tests\TestCase;
 use Sunrice\Models\Blueprint;
 use Sunrice\Models\Collection;
 use Sunrice\Models\Entry;

@@ -13,7 +13,7 @@ use Sunrice\Commerce\Payments\Models\WebhookCall;
 use Sunrice\Commerce\Payments\PaymentContext;
 use Sunrice\Commerce\Payments\PaymentManager;
 use Sunrice\Commerce\Settings\StoreSettings;
-use Sunrice\Midtrans\MidtransClient;
+use Sunrice\CommerceMidtrans\MidtransClient;
 
 /*
  * Midtrans Snap with a fake client (no network): the redirect, its reuse,
@@ -22,7 +22,7 @@ use Sunrice\Midtrans\MidtransClient;
 
 beforeEach(function () {
     $this->withoutMiddleware(ValidateCsrfToken::class);
-    config(['honeypot.enabled' => false, 'midtrans.sandbox_server_key' => 'SB-Mid-server-test']);
+    config(['honeypot.enabled' => false, 'commerce-midtrans.sandbox_server_key' => 'SB-Mid-server-test']);
     $this->mug = checkoutStore();
     app(ToggleFeature::class)->handle('midtrans', true);
     app(StoreSettings::class)->saveSection('payments', ['methods' => ['midtrans' => ['active' => true, 'title' => ['id' => 'Midtrans'], 'instructions' => ['id' => 'Bayar lewat Midtrans.']]]]);
@@ -76,11 +76,11 @@ it('is offered only while its module is on and its key is set', function () {
     $offered = fn () => array_keys(app(PaymentManager::class)->available(new PaymentContext(60000)));
     expect($offered())->toContain('midtrans');
 
-    config(['midtrans.sandbox_server_key' => null]);
+    config(['commerce-midtrans.sandbox_server_key' => null]);
     app()->forgetScopedInstances();
     expect($offered())->not->toContain('midtrans');
 
-    config(['midtrans.sandbox_server_key' => 'SB-Mid-server-test']);
+    config(['commerce-midtrans.sandbox_server_key' => 'SB-Mid-server-test']);
     app(ToggleFeature::class)->handle('midtrans', false);
     app()->forgetScopedInstances();
     expect($offered())->not->toContain('midtrans');

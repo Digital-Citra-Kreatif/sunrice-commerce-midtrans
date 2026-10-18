@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sunrice\Midtrans;
+namespace Sunrice\CommerceMidtrans;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -43,8 +43,8 @@ class Midtrans extends GatewayMethod
     public function settingsSchema(): array
     {
         return $this->gatewayFields([
-            'sandbox' => ['midtrans.sandbox_server_key' => 'MIDTRANS_SANDBOX_SERVER_KEY'],
-            'live' => ['midtrans.server_key' => 'MIDTRANS_SERVER_KEY'],
+            'sandbox' => ['commerce-midtrans.sandbox_server_key' => 'MIDTRANS_SANDBOX_SERVER_KEY'],
+            'live' => ['commerce-midtrans.server_key' => 'MIDTRANS_SERVER_KEY'],
         ]);
     }
 
@@ -60,7 +60,7 @@ class Midtrans extends GatewayMethod
 
     protected function serverKey(): string
     {
-        return (string) config($this->sandbox() ? 'midtrans.sandbox_server_key' : 'midtrans.server_key');
+        return (string) config($this->sandbox() ? 'commerce-midtrans.sandbox_server_key' : 'commerce-midtrans.server_key');
     }
 
     /** Midtrans takes whole rupiah. */

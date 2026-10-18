@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sunrice\Midtrans;
+namespace Sunrice\CommerceMidtrans;
 
 /**
  * The calls the Midtrans method makes (bound to MidtransSdkClient, which

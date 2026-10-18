@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sunrice\Midtrans;
+namespace Sunrice\CommerceMidtrans;
 
 use Midtrans\Config;
 use Midtrans\Snap;

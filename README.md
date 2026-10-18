@@ -1,4 +1,4 @@
-# Sunrice Midtrans
+# Sunrice Commerce Midtrans
 
 [Midtrans Snap](https://midtrans.com) payments for [Sunrice Commerce](https://github.com/Digital-Citra-Kreatif/sunrice-commerce):
 the customer is sent to Midtrans' payment page and picks a card, e-wallet, QRIS, virtual account or
@@ -24,7 +24,7 @@ store in IDR. The Midtrans SDK (`midtrans/midtrans-php`) comes with the package.
 ## Install
 
 ```bash
-composer require sunrice/midtrans
+composer require sunrice/commerce-midtrans
 ```
 
 The service provider is discovered by Laravel. It adds the `midtrans` module and the `midtrans`
@@ -119,17 +119,17 @@ refunded. The method does not send refunds to Midtrans from the store's admin.
 
 ## Configuration
 
-`config/midtrans.php` (key `midtrans`); publish it with
-`php artisan vendor:publish --tag=midtrans-config`.
+`config/commerce-midtrans.php` (key `commerce-midtrans`); publish it with
+`php artisan vendor:publish --tag=commerce-midtrans-config`.
 
 | Key | Default | |
 | --- | --- | --- |
-| `midtrans.server_key` | `env('MIDTRANS_SERVER_KEY')` | Production server key |
-| `midtrans.sandbox_server_key` | `env('MIDTRANS_SANDBOX_SERVER_KEY')` | Sandbox server key |
+| `commerce-midtrans.server_key` | `env('MIDTRANS_SERVER_KEY')` | Production server key |
+| `commerce-midtrans.sandbox_server_key` | `env('MIDTRANS_SANDBOX_SERVER_KEY')` | Sandbox server key |
 
 ## Testing your store
 
-The SDK calls go through `Sunrice\Midtrans\MidtransClient` (bound with `bindIf` to
+The SDK calls go through `Sunrice\CommerceMidtrans\MidtransClient` (bound with `bindIf` to
 `MidtransSdkClient`). Bind your own in the container to test without the network:
 
 ```php
