@@ -1,0 +1,11 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+    # The package's own config directory (env() belongs there).
+    configDirectories:
+        - config
+    paths:
+        - src/
+        - config/
