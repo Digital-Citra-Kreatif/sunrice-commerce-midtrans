@@ -181,13 +181,13 @@ it('asks Midtrans for the status on the return and before expiring', function ()
 
 it('shows which keys are set in its settings, never the keys', function () {
     actingAsUserWith(['commerce.settings.payments']);
-    $response = $this->get('/cms/commerce/settings/payments/midtrans')->assertOk();
+    $response = $this->get('/admin/commerce/settings/payments/midtrans')->assertOk();
     $page = json_encode($response->viewData('page'));
 
     expect($page)->toContain('MIDTRANS_SANDBOX_SERVER_KEY (set)')->toContain('MIDTRANS_SERVER_KEY (missing)')
         ->toContain('commerce\/webhooks\/midtrans')->not->toContain('SB-Mid-server-test');
 
-    $this->put('/cms/commerce/settings/payments/midtrans', ['values' => ['active' => true, 'sandbox' => false]])->assertRedirect('/cms/commerce/settings/payments');
+    $this->put('/admin/commerce/settings/payments/midtrans', ['values' => ['active' => true, 'sandbox' => false]])->assertRedirect('/admin/commerce/settings/payments');
     app()->forgetScopedInstances();
     expect(app(StoreSettings::class)->get('payments.methods.midtrans.sandbox'))->toBeFalse()
         ->and(array_keys(app(PaymentManager::class)->available(new PaymentContext(60000))))->not->toContain('midtrans');

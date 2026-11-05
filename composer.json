@@ -14,11 +14,18 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-cms"
+            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-admin",
+            "no-api": true
         },
         {
             "type": "vcs",
-            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-commerce"
+            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-cms",
+            "no-api": true
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/Digital-Citra-Kreatif/sunrice-commerce",
+            "no-api": true
         }
     ],
     "require": {
