@@ -2,8 +2,10 @@
 
 ## Unreleased — 1.0.0
 
-The first release, moved out of Sunrice Commerce. Needs Sunrice Commerce with
-`Payments\Methods\GatewayMethod` (`dev-main` until commerce is tagged), PHP 8.4 and Laravel 13.
+The first release, moved out of Sunrice Commerce. Needs Sunrice Commerce on the Sunrice panel
+(`sunrice/admin`) and CMS (`sunrice/cms`) (`dev-main` until commerce is tagged), PHP 8.4 and
+Laravel 13. Its settings page is Settings → Store → Payments → Midtrans, at
+`/admin/commerce/settings/payments/midtrans`.
 
 Renamed before the first release to match the other commerce packages (`sunrice/commerce-biteship`):
 the package is `sunrice/commerce-midtrans` (was `sunrice/midtrans`), the namespace
