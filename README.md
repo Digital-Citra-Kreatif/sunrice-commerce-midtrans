@@ -5,7 +5,7 @@ the customer is sent to Midtrans' payment page and picks a card, e-wallet, QRIS,
 other channel there. Notifications are verified, mapped to the payment's state and recorded by
 commerce; the order follows.
 
-Requirements: PHP 8.4+, Laravel 13, Sunrice Commerce 1.x with `Payments\Methods\GatewayMethod`, a
+Requirements: PHP 8.4+, Laravel 13, Sunrice Commerce 0.1 (`sunrice/commerce`, which Composer installs with it), a
 store in IDR. The Midtrans SDK (`midtrans/midtrans-php`) comes with the package.
 
 ## Contents
