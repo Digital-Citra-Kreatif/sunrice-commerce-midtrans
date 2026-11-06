@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased — 1.0.0
+## Unreleased
 
-The first release, moved out of Sunrice Commerce. Needs Sunrice Commerce on the Sunrice panel
-(`sunrice/admin`) and CMS (`sunrice/cms`) (`dev-main` until commerce is tagged), PHP 8.4 and
-Laravel 13. Its settings page is Settings → Store → Payments → Midtrans, at
+## 0.1.0 (2026-11-06)
+
+The first release, moved out of Sunrice Commerce. Needs Sunrice Commerce 0.1 (`sunrice/commerce`,
+on `sunrice/admin` and `sunrice/cms` 0.6), PHP 8.4 and Laravel 13. Its settings page is Settings → Store → Payments → Midtrans, at
 `/admin/commerce/settings/payments/midtrans`.
 
 Renamed before the first release to match the other commerce packages (`sunrice/commerce-biteship`):

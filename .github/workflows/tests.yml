@@ -73,11 +73,6 @@ jobs:
           echo "DB_PASSWORD=postgres" >> $GITHUB_ENV
 
       - name: Install dependencies
-        # sunrice/cms and sunrice/commerce come from their public GitHub
-        # repositories until they are on Packagist; the token only raises
-        # GitHub's API rate limit.
-        env:
-          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
         run: composer install --no-interaction --prefer-dist
 
       - name: Lint
