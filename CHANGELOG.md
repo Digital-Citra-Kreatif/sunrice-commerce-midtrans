@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.1 (2026-11-07)
+
+Works with Sunrice Commerce 0.2 (`sunrice/commerce` `^0.1 || ^0.2`) as well as 0.1. Nothing else changes.
+
 ## 0.1.0 (2026-11-06)
 
 The first release, moved out of Sunrice Commerce. Needs Sunrice Commerce 0.1 (`sunrice/commerce`,

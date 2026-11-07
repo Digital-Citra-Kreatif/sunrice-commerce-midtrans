@@ -18,7 +18,7 @@
         "illuminate/support": "^13.0",
         "midtrans/midtrans-php": "^2.6",
         "spatie/laravel-package-tools": "^1.93",
-        "sunrice/commerce": "^0.1"
+        "sunrice/commerce": "^0.1 || ^0.2"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
