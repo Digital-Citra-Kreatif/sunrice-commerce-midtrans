@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.1.2 (2026-11-19)
+
+Works with Sunrice Commerce 0.3 as well as 0.1 and 0.2. No code changes: commerce 0.3's deposits
+work as they are, and the README covers the scheduler, deposits and troubleshooting.
+
 - README: the scheduler as the webhook safety net, deposits, and troubleshooting with the webhook
   log.
 
