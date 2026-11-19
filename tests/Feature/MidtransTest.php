@@ -6,14 +6,17 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Testing\TestResponse;
 use Sunrice\Commerce\Catalog\Models\Variant;
+use Sunrice\Commerce\Commerce;
 use Sunrice\Commerce\Features\Actions\ToggleFeature;
 use Sunrice\Commerce\Orders\Models\Order;
 use Sunrice\Commerce\Payments\Events\PaymentRecorded;
 use Sunrice\Commerce\Payments\Models\WebhookCall;
 use Sunrice\Commerce\Payments\PaymentContext;
 use Sunrice\Commerce\Payments\PaymentManager;
+use Sunrice\Commerce\Pricing\CalculationState;
 use Sunrice\Commerce\Settings\StoreSettings;
 use Sunrice\CommerceMidtrans\MidtransClient;
+use Workbench\App\Commerce\TestDeposit;
 
 /*
  * Midtrans Snap with a fake client (no network): the redirect, its reuse,
@@ -63,10 +66,11 @@ function placeWithMidtrans(Variant $mug): Order
     return Order::query()->sole();
 }
 
-/** A notification signed with the server key, for the order's payment. */
+/** A notification signed with the server key, for the order's first payment unless order_id says otherwise. */
 function midtransNotify(Order $order, array $data, string $key = 'SB-Mid-server-test'): TestResponse
 {
-    $data = ['order_id' => $order->payments()->sole()->reference, 'status_code' => '200', 'gross_amount' => '60000.00', 'transaction_id' => 'tx-1', ...$data];
+    $data['order_id'] ??= $order->payments()->oldest('id')->firstOrFail()->reference;
+    $data = ['status_code' => '200', 'gross_amount' => '60000.00', 'transaction_id' => 'tx-1', ...$data];
     $data['signature_key'] ??= hash('sha512', $data['order_id'].$data['status_code'].$data['gross_amount'].$key);
 
     return test()->postJson('/commerce/webhooks/midtrans', $data);
@@ -178,6 +182,42 @@ it('asks Midtrans for the status on the return and before expiring', function ()
     $this->artisan('commerce:tick');
     expect($order->fresh()->payment_status)->toBe('paid');
 });
+
+it('charges a deposit at checkout and the balance as its own Snap transaction', function () {
+    app(Commerce::class)->registerCalculationStage(TestDeposit::class, 95);
+    $order = placeWithMidtrans($this->mug);
+    $deposit = $order->payments()->sole();
+    expect([$order->total, $order->deposit_total, $deposit->amount])->toBe([60000, 18000, 18000])
+        ->and($this->midtrans->created[0][0]['transaction_details'])->toBe(['order_id' => $deposit->reference, 'gross_amount' => 18000]);
+
+    midtransNotify($order, ['transaction_status' => 'settlement', 'gross_amount' => '18000.00'])->assertOk();
+    $order->refresh();
+    expect([$order->status, $order->payment_status, $order->paid_total, $order->balanceDue()])->toBe(['processing', 'partially_paid', 18000, 42000]);
+
+    // The balance: a new payment and a new Midtrans order id (Midtrans refuses one twice).
+    $this->post("/order/{$order->order_key}/pay", ['payment_method' => 'midtrans'])->assertRedirect('https://app.sandbox.midtrans.com/snap/v4/redirection/tok-2');
+    $balance = $order->payments()->latest('id')->first();
+    expect($balance->amount)->toBe(42000)->and($balance->meta['part'])->toBe('balance')->and($balance->reference)->not->toBe($deposit->reference)
+        ->and($this->midtrans->created[1][0]['transaction_details'])->toBe(['order_id' => $balance->reference, 'gross_amount' => 42000]);
+
+    // The deposit's amount on the balance's transaction isn't the balance.
+    midtransNotify($order, ['order_id' => $balance->reference, 'transaction_id' => 'tx-2', 'transaction_status' => 'settlement', 'gross_amount' => '18000.00'])->assertStatus(400);
+    midtransNotify($order, ['order_id' => $balance->reference, 'transaction_id' => 'tx-2', 'transaction_status' => 'settlement', 'gross_amount' => '42000.00'])->assertOk();
+    $order->refresh();
+    expect([$order->status, $order->payment_status, $order->paid_total])->toBe(['processing', 'paid', 60000]);
+})->skip(! property_exists(CalculationState::class, 'deposit'), 'Deposits need Sunrice Commerce 0.3.');
+
+it('keeps a deposit order open when the balance transaction expires', function () {
+    app(Commerce::class)->registerCalculationStage(TestDeposit::class, 95);
+    $order = placeWithMidtrans($this->mug);
+    midtransNotify($order, ['transaction_status' => 'settlement', 'gross_amount' => '18000.00'])->assertOk();
+    $this->post("/order/{$order->order_key}/pay", ['payment_method' => 'midtrans']);
+    $balance = $order->payments()->latest('id')->first();
+
+    midtransNotify($order, ['order_id' => $balance->reference, 'transaction_id' => 'tx-2', 'transaction_status' => 'expire', 'status_code' => '407', 'gross_amount' => '42000.00'])->assertOk();
+    $order->refresh();
+    expect([$order->status, $order->payment_status, $balance->fresh()->status])->toBe(['processing', 'partially_paid', 'expired']);
+})->skip(! property_exists(CalculationState::class, 'deposit'), 'Deposits need Sunrice Commerce 0.3.');
 
 it('shows which keys are set in its settings, never the keys', function () {
     actingAsUserWith(['commerce.settings.payments']);
