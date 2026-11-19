@@ -196,7 +196,7 @@ it('charges a deposit at checkout and the balance as its own Snap transaction', 
 
     // The balance: a new payment and a new Midtrans order id (Midtrans refuses one twice).
     $this->post("/order/{$order->order_key}/pay", ['payment_method' => 'midtrans'])->assertRedirect('https://app.sandbox.midtrans.com/snap/v4/redirection/tok-2');
-    $balance = $order->payments()->latest('id')->first();
+    $balance = $order->payments()->reorder('id', 'desc')->first();
     expect($balance->amount)->toBe(42000)->and($balance->meta['part'])->toBe('balance')->and($balance->reference)->not->toBe($deposit->reference)
         ->and($this->midtrans->created[1][0]['transaction_details'])->toBe(['order_id' => $balance->reference, 'gross_amount' => 42000]);
 
@@ -212,7 +212,7 @@ it('keeps a deposit order open when the balance transaction expires', function (
     $order = placeWithMidtrans($this->mug);
     midtransNotify($order, ['transaction_status' => 'settlement', 'gross_amount' => '18000.00'])->assertOk();
     $this->post("/order/{$order->order_key}/pay", ['payment_method' => 'midtrans']);
-    $balance = $order->payments()->latest('id')->first();
+    $balance = $order->payments()->reorder('id', 'desc')->first();
 
     midtransNotify($order, ['order_id' => $balance->reference, 'transaction_id' => 'tx-2', 'transaction_status' => 'expire', 'status_code' => '407', 'gross_amount' => '42000.00'])->assertOk();
     $order->refresh();
