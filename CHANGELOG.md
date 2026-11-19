@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- README: the scheduler as the webhook safety net, deposits, and troubleshooting with the webhook
+  log.
+
 Works with Sunrice Commerce 0.3 (`sunrice/commerce` `^0.1 || ^0.2 || ^0.3`). Its deposits need no
 change here: the deposit and the balance are separate payments, each with its own Snap transaction
 for its own amount. Tests cover a deposit order end to end (skipped on commerce 0.1 and 0.2).

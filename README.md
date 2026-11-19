@@ -18,6 +18,9 @@ store in IDR. The Midtrans SDK (`midtrans/midtrans-php`) comes with the package.
 - [How it works](#how-it-works)
 - [Status mapping](#status-mapping)
 - [Refunds](#refunds)
+- [The scheduler](#the-scheduler)
+- [Deposits](#deposits)
+- [Troubleshooting](#troubleshooting)
 - [Configuration](#configuration)
 - [Testing your store](#testing-your-store)
 
@@ -114,8 +117,67 @@ Paid times come from `settlement_time` (or `transaction_time`), read in Asia/Jak
 
 Refund in the Midtrans dashboard. Midtrans then sends a `refund` or `partial_refund` notification,
 and the method records the difference between Midtrans' refunded total (the sum of its `refunds`)
-and what the payment already has, so each refund is counted once. A full refund marks the payment
+and what the payment already has, so each refund is counted once, also when staff recorded
+it in the admin first. A full refund marks the payment
 refunded. The method does not send refunds to Midtrans from the store's admin.
+
+## The scheduler
+
+Run Laravel's scheduler, which runs commerce's `commerce:tick` every minute:
+
+```cron
+* * * * * cd /path/to/site && php artisan schedule:run >> /dev/null 2>&1
+```
+
+It is the safety net for webhooks. When an unpaid payment's deadline passes, `commerce:tick` first
+asks Midtrans for its status, so a payment whose notification was lost is still recorded as paid.
+Only a payment that is still unpaid then expires, which cancels the order. Without the scheduler, a
+lost notification leaves the order unpaid and unpaid orders never expire.
+
+## Deposits
+
+When an extension asks for a deposit (commerce's
+[Deposits](https://github.com/Digital-Citra-Kreatif/sunrice-commerce/blob/main/docs/payments.md#deposits),
+Sunrice Commerce 0.3), the deposit and the balance are two separate payments, each with its own
+Midtrans Snap transaction for its own amount. The deposit is charged at checkout, the balance when
+the customer pays it from the order page. A notification for the balance with the deposit's amount,
+or the reverse, is refused like any other wrong amount. An expired balance leaves the order open and
+Partially paid.
+
+## Troubleshooting
+
+Commerce stores every call to `/commerce/webhooks/midtrans` in the `commerce_webhook_calls` table
+(kept 30 days, `commerce.webhooks.keep_days`). The admin has no page for it, so query it:
+
+```sql
+SELECT received_at, status, error, event_id, payment_id
+FROM commerce_webhook_calls WHERE method = 'midtrans' ORDER BY id DESC LIMIT 20;
+```
+
+| `status` | Meaning |
+| --- | --- |
+| `processed` | Verified and recorded: the payment (and order) changed. |
+| `ignored` | Verified, but nothing to change: a duplicate, a status the payment already has, or an unknown reference (`error` says which). |
+| `failed` | Refused with `400` (`error` says why), or failed while recording with `500` (Midtrans retries). |
+
+If a payment doesn't update:
+
+- **No rows at all**: Midtrans isn't calling the store. Check that the notification URL is set in
+  the dashboard for the mode you're paying in (test and live are separate), that it is reachable
+  from the internet, and that the Payments and Midtrans modules are on (a module that's off answers
+  `404`).
+- **`failed`, signature**: the server key (`MIDTRANS_SANDBOX_SERVER_KEY` or `MIDTRANS_SERVER_KEY`)
+  in `.env` belongs to the other mode, or the method's **Sandbox** switch doesn't match the
+  dashboard you're paying in. After editing `.env`, clear the config cache
+  (`php artisan config:clear`).
+- **`failed`, amount**: Midtrans reported a different amount from the payment's, and the payment
+  stays unpaid. Check the transaction in the dashboard, then mark the order paid by hand if the
+  money arrived.
+- **`ignored`, unknown reference**: the notification is for a transaction this store didn't create
+  (another site on the same Midtrans account, or a dashboard test).
+- **No change after the customer paid**: wait for the notification or the scheduler's check (see
+  [The scheduler](#the-scheduler)). A `capture` with `fraud_status` `challenge` waits for you to
+  accept or deny it in the Midtrans dashboard.
 
 ## Configuration
 
