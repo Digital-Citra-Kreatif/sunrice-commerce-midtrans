@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 use Sunrice\Commerce\Catalog\Models\Variant;
 use Sunrice\Commerce\Commerce;
 use Sunrice\Commerce\Features\Actions\ToggleFeature;
 use Sunrice\Commerce\Orders\Models\Order;
+use Sunrice\Commerce\Payments\Contracts\StartsCheckoutSession;
 use Sunrice\Commerce\Payments\Events\PaymentRecorded;
+use Sunrice\Commerce\Payments\Models\Payment;
 use Sunrice\Commerce\Payments\Models\WebhookCall;
 use Sunrice\Commerce\Payments\PaymentContext;
 use Sunrice\Commerce\Payments\PaymentManager;
 use Sunrice\Commerce\Pricing\CalculationState;
 use Sunrice\Commerce\Settings\StoreSettings;
+use Sunrice\CommerceMidtrans\CheckoutSessionMidtrans;
+use Sunrice\CommerceMidtrans\Midtrans;
 use Sunrice\CommerceMidtrans\MidtransClient;
 use Workbench\App\Commerce\TestDeposit;
 
@@ -25,6 +30,7 @@ use Workbench\App\Commerce\TestDeposit;
 
 beforeEach(function () {
     $this->withoutMiddleware(ValidateCsrfToken::class);
+    app(Commerce::class)->registerPaymentMethod(Midtrans::class);
     config(['honeypot.enabled' => false, 'commerce-midtrans.sandbox_server_key' => 'SB-Mid-server-test']);
     $this->mug = checkoutStore();
     app(ToggleFeature::class)->handle('midtrans', true);
@@ -232,3 +238,44 @@ it('shows which keys are set in its settings, never the keys', function () {
     expect(app(StoreSettings::class)->get('payments.methods.midtrans.sandbox'))->toBeFalse()
         ->and(array_keys(app(PaymentManager::class)->available(new PaymentContext(60000))))->not->toContain('midtrans');
 });
+
+it('distinguishes an unopened session from a pending payment and confirms cancellation', function () {
+    $payment = (new Payment)->forceFill(['reference' => 'snap-order', 'meta' => ['snap_token' => 'tok-1', 'sandbox' => true]]);
+    $method = app(Midtrans::class);
+    $url = 'https://app.sandbox.midtrans.com/snap/v1/transactions/tok-1/cancel';
+    Http::preventStrayRequests();
+    Http::fake([$url => Http::sequence()
+        ->push(['error_messages' => ['Transaction is on progress']], 400)
+        ->push(['canceled_at' => '2026-11-20T10:00:00Z'])
+        ->push(['error_messages' => ['token already canceled']], 400)]);
+
+    expect($method->checkoutStatus($payment))->toBeNull();
+    $this->midtrans->statuses['snap-order'] = ['order_id' => 'snap-order', 'transaction_status' => 'pending'];
+    expect($method->checkoutStatus($payment)->status)->toBe('pending')
+        ->and($method->cancelCheckoutSession($payment))->toBeFalse()
+        ->and($method->cancelCheckoutSession($payment))->toBeTrue()
+        ->and($method->cancelCheckoutSession($payment))->toBeTrue();
+    Http::assertSent(fn ($request) => $request->url() === $url && $request->method() === 'POST'
+        && $request->hasHeader('Authorization', 'Basic '.base64_encode('SB-Mid-server-test:')));
+});
+
+it('preserves checkout until a Midtrans payment starts on Commerce with hosted sessions', function () {
+    app(Commerce::class)->registerPaymentMethod(CheckoutSessionMidtrans::class);
+    $cart = cartWith([[$this->mug, 1]]);
+    $input = checkoutInput(['payment_method' => 'midtrans']);
+    $place = fn () => $this->post('/checkout', [...$input, 'action' => 'place', 'totals_hash' => seenHash($cart, $input)]);
+    $place()->assertRedirect('https://app.sandbox.midtrans.com/snap/v4/redirection/tok-1');
+    expect(Order::query()->count())->toBe(0);
+    Http::preventStrayRequests();
+    Http::fake(['https://app.sandbox.midtrans.com/snap/v1/transactions/tok-1/cancel' => Http::response(['canceled_at' => '2026-11-20T10:00:00Z'])]);
+    $this->get('/checkout')->assertOk()->assertSee('Jl. Sarijadi 1');
+
+    $place()->assertRedirect('https://app.sandbox.midtrans.com/snap/v4/redirection/tok-2');
+    $reference = $this->midtrans->created[1][0]['transaction_details']['order_id'];
+    $this->midtrans->statuses[$reference] = ['order_id' => $reference, 'transaction_status' => 'pending'];
+    $response = $this->get('/checkout');
+    $order = Order::query()->sole();
+    $response->assertRedirect($order->url());
+    expect($order->total)->toBe(60000)->and($order->payment()->reference)->toBe($reference);
+    Http::assertSentCount(1);
+})->skip(! interface_exists(StartsCheckoutSession::class), 'Commerce does not support hosted checkout sessions');

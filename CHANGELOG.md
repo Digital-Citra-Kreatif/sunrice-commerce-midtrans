@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added hosted checkout session support on compatible Commerce versions. Returning from Snap
+  before payment starts restores checkout. A pending payment keeps the original order totals.
+
 ## 0.1.2 (2026-11-19)
 
 Works with Sunrice Commerce 0.3 as well as 0.1 and 0.2. No code changes: commerce 0.3's deposits

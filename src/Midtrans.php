@@ -6,6 +6,8 @@ namespace Sunrice\CommerceMidtrans;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
+use RuntimeException;
 use Sunrice\Commerce\Orders\Models\Order;
 use Sunrice\Commerce\Payments\InvalidWebhook;
 use Sunrice\Commerce\Payments\Methods\GatewayMethod;
@@ -119,6 +121,63 @@ class Midtrans extends GatewayMethod
         }
 
         return $this->result($data, $payment) ?? PaymentResult::pending($payment->reference);
+    }
+
+    public function checkoutStatus(Payment $payment): ?PaymentResult
+    {
+        if ($payment->reference === null) {
+            return null;
+        }
+
+        [$key, $production] = $this->checkoutCredentials($payment);
+        try {
+            $data = $this->client->status($payment->reference, $key, $production);
+        } catch (Throwable $error) {
+            if ($error->getCode() === 404) {
+                return null;
+            }
+
+            throw $error;
+        }
+
+        if (! isset($data['transaction_status'])) {
+            throw new RuntimeException('Midtrans did not return a transaction status.');
+        }
+
+        $result = $this->result($data, $payment);
+        if ($result === null) {
+            throw new RuntimeException('Midtrans returned an unexpected payment amount.');
+        }
+
+        return $result;
+    }
+
+    public function cancelCheckoutSession(Payment $payment): bool
+    {
+        $token = $payment->meta['snap_token'] ?? null;
+        if (! is_string($token) || $token === '') {
+            return false;
+        }
+
+        [$key, $production] = $this->checkoutCredentials($payment);
+        $host = $production ? 'https://app.midtrans.com' : 'https://app.sandbox.midtrans.com';
+        $response = Http::withBasicAuth($key, '')->asJson()->acceptJson()->timeout(10)
+            ->post($host.'/snap/v1/transactions/'.rawurlencode($token).'/cancel');
+
+        return ($response->successful() && filled($response->json('canceled_at')))
+            || in_array('token already canceled', (array) $response->json('error_messages'), true);
+    }
+
+    /** @return array{string, bool} */
+    private function checkoutCredentials(Payment $payment): array
+    {
+        $sandbox = (bool) ($payment->meta['sandbox'] ?? $this->sandbox());
+        $key = (string) config($sandbox ? 'commerce-midtrans.sandbox_server_key' : 'commerce-midtrans.server_key');
+        if ($key === '') {
+            throw new RuntimeException('Midtrans has no key for this payment environment.');
+        }
+
+        return [$key, ! $sandbox];
     }
 
     /**
