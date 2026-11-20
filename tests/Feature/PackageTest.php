@@ -5,7 +5,9 @@ declare(strict_types=1);
 use Illuminate\Support\ServiceProvider;
 use Sunrice\Commerce\Commerce;
 use Sunrice\Commerce\Features\FeatureRegistry;
+use Sunrice\Commerce\Payments\Contracts\StartsCheckoutSession;
 use Sunrice\Commerce\Payments\PaymentRegistry;
+use Sunrice\CommerceMidtrans\CheckoutSessionMidtrans;
 use Sunrice\CommerceMidtrans\Midtrans;
 use Sunrice\CommerceMidtrans\MidtransClient;
 use Sunrice\CommerceMidtrans\MidtransSdkClient;
@@ -20,7 +22,9 @@ it('registers the midtrans module, off by default and needing payments', functio
 });
 
 it('registers the method under the key midtrans, with the SDK client', function () {
-    expect(app(PaymentRegistry::class)->classes()['midtrans'] ?? null)->toBe(Midtrans::class)
+    $method = interface_exists(StartsCheckoutSession::class) ? CheckoutSessionMidtrans::class : Midtrans::class;
+
+    expect(app(PaymentRegistry::class)->classes()['midtrans'] ?? null)->toBe($method)
         ->and(app(MidtransClient::class))->toBeInstanceOf(MidtransSdkClient::class)
         ->and(app(MidtransClient::class)->installed())->toBeTrue();
 });

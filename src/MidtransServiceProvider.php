@@ -8,6 +8,7 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Sunrice\Commerce\Facades\Commerce;
 use Sunrice\Commerce\Features\Feature;
+use Sunrice\Commerce\Payments\Contracts\StartsCheckoutSession;
 
 /**
  * The Midtrans module and payment method for Sunrice Commerce. Keys come
@@ -31,6 +32,6 @@ class MidtransServiceProvider extends PackageServiceProvider
     {
         Commerce::registerFeature(new Feature('midtrans', 'payments', 'Midtrans', 'Cards, e-wallets, QRIS and virtual accounts on Midtrans Snap. Needs MIDTRANS_SERVER_KEY.',
             ['payments'], ['shop', 'quote'], default: false));
-        Commerce::registerPaymentMethod(Midtrans::class);
+        Commerce::registerPaymentMethod(interface_exists(StartsCheckoutSession::class) ? CheckoutSessionMidtrans::class : Midtrans::class);
     }
 }

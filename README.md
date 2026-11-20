@@ -24,6 +24,13 @@ store in IDR. The Midtrans SDK (`midtrans/midtrans-php`) comes with the package.
 - [Configuration](#configuration)
 - [Testing your store](#testing-your-store)
 
+## Returning to checkout from Snap
+
+With a Commerce version that supports hosted checkout sessions, shoppers who go back before
+starting payment return to their saved checkout after Midtrans cancels the unused Snap session.
+When Midtrans confirms a pending or paid transaction, Commerce places the order using the original
+checkout totals. Older Commerce versions open Snap after placing the order.
+
 ## Install
 
 ```bash
