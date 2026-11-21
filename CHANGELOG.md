@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.2.0 (2026-11-21)
+
+Works with Sunrice Commerce 0.4 (and Sunrice 0.8) as well as 0.1 to 0.3 (`sunrice/commerce`
+`^0.1 || ^0.2 || ^0.3 || ^0.4`). Update with `composer update sunrice/commerce-midtrans`.
+
+- Works with Sunrice Commerce 0.4: tested against it with Sunrice 0.8; no code changes for it.
 - Added hosted checkout session support on compatible Commerce versions. Returning from Snap
   before payment starts restores checkout. A pending payment keeps the original order totals.
 
